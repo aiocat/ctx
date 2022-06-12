@@ -17,8 +17,8 @@ impl Cursor {
         }
     }
 
-    pub fn move_right(&mut self) {
-        if self.0 != u16::MAX {
+    pub fn move_right(&mut self, max: u16) {
+        if self.0 != max {
             self.0 += 1;
             self.set();
         }
@@ -31,8 +31,8 @@ impl Cursor {
         }
     }
 
-    pub fn move_bottom(&mut self) {
-        if self.1 != u16::MAX {
+    pub fn move_bottom(&mut self, max: u16) {
+        if self.1 != max {
             self.1 += 1;
             self.set();
         }
@@ -45,6 +45,6 @@ impl Cursor {
     }
 
     pub fn set(&self) {
-        execute!(stdout(), cursor::MoveTo(self.0, self.1));
+        execute!(stdout(), cursor::MoveTo(self.0, self.1)).ok();
     }
 }

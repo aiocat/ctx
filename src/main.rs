@@ -1,7 +1,7 @@
 use crossterm::terminal;
 
-mod input;
 mod cursor_manager;
+mod input;
 mod manager;
 
 fn main() {
