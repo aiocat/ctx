@@ -71,6 +71,12 @@ impl Cursor {
         self.set();
     }
 
+    pub fn reset_only(&mut self) {
+        self.x = 0;
+        self.y = 0;
+        self.set();
+    }
+
     pub fn reset_only_x(&mut self) {
         self.x = 0;
         self.set();

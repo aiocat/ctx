@@ -6,6 +6,7 @@
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::mem::take;
 use std::path::Path;
 
 use crate::cursor_manager::Cursor;
@@ -56,6 +57,24 @@ impl Reader {
             }
 
             println!();
+        }
+    }
+
+    pub fn delete_character(&mut self, cursor: &Cursor) {
+        let line = cursor.main.y;
+        let column = cursor.main.x;
+
+        if line >= self.lines.len() {
+            return;
+        }
+
+        let mut selected = take(&mut self.lines[line]);
+
+        if selected.len() == 0 {
+            self.lines.remove(line);
+        } else if column < selected.len() {
+            selected.remove(column);
+            self.lines[line] = selected;
         }
     }
 }
