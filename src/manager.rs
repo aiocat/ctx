@@ -5,74 +5,89 @@
 
 use crossterm::event::{KeyCode, KeyEvent};
 use crossterm::terminal::ClearType;
-use crossterm::{execute, terminal};
-use std::cell::Cell;
+use crossterm::{cursor, execute, terminal};
 use std::io::stdout;
-use std::process;
 
-use crate::cursor_manager::Cursor;
+use crate::cursor_manager::{Cursor, MainCursor};
 use crate::input::watch_key;
+use crate::reader::Reader;
 
 #[derive(Default)]
 pub struct Size(pub u16, pub u16);
 
 pub struct Manager {
-    size: Cell<Size>,
-    cursor: Cell<Cursor>,
+    pub size: Size,
+    pub cursor: Cursor,
+    pub reader: Reader,
 }
 
 impl Manager {
     pub fn new() -> Self {
         let win_size = terminal::size().map(|(x, y)| (x as u16, y as u16)).unwrap();
+
         Self {
-            size: Cell::new(Size(win_size.0, win_size.1)),
-            cursor: Cell::new(Cursor(0, 0)),
+            size: Size(win_size.0, win_size.1),
+            cursor: Cursor {
+                x: 0,
+                y: 0,
+                main: MainCursor { x: 0, y: 0 },
+            },
+            reader: Reader::default(),
         }
     }
 
-    fn handle_arrows(&self, key: KeyEvent) {
-        let size = self.size.take();
-        let mut cursor = self.cursor.take();
-
+    fn handle_arrows(&mut self, key: KeyEvent) {
         match key.code {
-            KeyCode::Left => cursor.move_left(),
-            KeyCode::Right => cursor.move_right(size.0),
-            KeyCode::Up => cursor.move_top(),
-            KeyCode::Down => cursor.move_bottom(size.1),
-            _ => todo!(),
+            KeyCode::Left => self.cursor.move_left(),
+            KeyCode::Right => self.cursor.move_right(self.size.0),
+            KeyCode::Up => {
+                self.cursor.move_top();
+                self.resize();
+            }
+            KeyCode::Down => {
+                self.cursor.move_bottom(self.size.1);
+                self.resize();
+            }
+            _ => {}
         };
-
-        self.cursor.set(cursor);
-        self.size.set(size);
     }
 
-    fn handle_exit(&self) {
-        drop(self.size.take());
-        drop(self.cursor.take());
+    pub fn watch(&mut self) {
+        self.read_file();
+        self.resize();
+        self.cursor.reset();
 
-        terminal::disable_raw_mode().expect("Unable to disable raw mode");
-        execute!(stdout(), terminal::Clear(ClearType::All)).ok();
-
-        process::exit(0);
-    }
-
-    pub fn watch(&self) {
-        watch_key(move |key: KeyEvent| match key.code {
-            KeyCode::Left | KeyCode::Right | KeyCode::Up | KeyCode::Down => {
-                self.handle_arrows(key);
-            }
-            KeyCode::Esc => {
-                self.handle_exit();
-            }
-            _ => todo!(),
+        watch_key(move |key: KeyEvent| {
+            self.resize();
+            match key.code {
+                KeyCode::Left | KeyCode::Right | KeyCode::Up | KeyCode::Down => {
+                    self.handle_arrows(key)
+                }
+                _ => {}
+            };
         });
     }
 
-    pub fn clear(&self) {
+    pub fn clear(&mut self) {
         execute!(stdout(), terminal::Clear(ClearType::All)).ok();
+    }
 
-        let mut cursor = self.cursor.take();
-        cursor.reset();
-        self.cursor.set(cursor);
+    fn read_file(&mut self) {
+        self.reader.read_from_file("./deneme.txt");
+    }
+
+    fn resize(&mut self) {
+        let win_size = terminal::size().map(|(x, y)| (x as u16, y as u16)).unwrap();
+        self.size = Size(win_size.0, win_size.1);
+        self.handle_buffer();
+    }
+
+    fn handle_buffer(&mut self) {
+        if self.cursor.y % (self.size.1 - 1) == 0 {
+            self.clear();
+            execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+            self.reader.print_lines(self.cursor.main.y, self.size.1);
+            self.cursor.reset_only_y();
+        }
     }
 }
