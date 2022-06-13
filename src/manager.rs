@@ -40,29 +40,33 @@ impl Manager {
         match key.code {
             KeyCode::Left => self.cursor.move_left(),
             KeyCode::Right => self.cursor.move_right(self.size.0),
-            KeyCode::Up => {
-                self.cursor.move_top();
-                self.resize();
-            }
-            KeyCode::Down => {
-                self.cursor.move_bottom(self.size.1);
-                self.resize();
-            }
+            KeyCode::Up => self.cursor.move_top(),
+            KeyCode::Down => self.cursor.move_bottom(self.size.1),
             _ => {}
         };
     }
 
     pub fn watch(&mut self) {
         self.read_file();
-        self.resize();
+        self.set_title();
         self.cursor.reset();
 
+        self.handle_buffer_left_right();
+        self.handle_buffer_up_down();
+
         watch_key(move |key: KeyEvent| {
-            self.resize();
             match key.code {
-                KeyCode::Left | KeyCode::Right | KeyCode::Up | KeyCode::Down => {
-                    self.handle_arrows(key)
+                KeyCode::Left | KeyCode::Right => {
+                    self.handle_arrows(key);
+                    self.set_title();
+                    self.handle_buffer_left_right();
                 }
+                KeyCode::Up | KeyCode::Down => {
+                    self.handle_arrows(key);
+                    self.set_title();
+                    self.handle_buffer_up_down();
+                }
+                KeyCode::Char('r') => self.resize(),
                 _ => {}
             };
         });
@@ -72,22 +76,41 @@ impl Manager {
         execute!(stdout(), terminal::Clear(ClearType::All)).ok();
     }
 
+    fn resize(&mut self) {
+        let win_size = terminal::size().map(|(x, y)| (x as u16, y as u16)).unwrap();
+        self.size = Size(win_size.0, win_size.1);
+
+        self.handle_buffer_up_down();
+        self.handle_buffer_left_right();
+    }
+
+    fn set_title(&mut self) {
+        execute!(
+            stdout(),
+            terminal::SetTitle(format!(
+                "Line {}, Column {}",
+                self.cursor.main.y + 1,
+                self.cursor.main.x
+            ))
+        )
+        .ok();
+    }
+
     fn read_file(&mut self) {
         self.reader.read_from_file("./deneme.txt");
     }
 
-    fn resize(&mut self) {
-        let win_size = terminal::size().map(|(x, y)| (x as u16, y as u16)).unwrap();
-        self.size = Size(win_size.0, win_size.1);
-        self.handle_buffer();
+    fn handle_buffer_up_down(&mut self) {
+        self.clear();
+        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+        self.reader.print_lines(&self.cursor, &self.size);
+        self.cursor.reset_only_y();
     }
 
-    fn handle_buffer(&mut self) {
-        if self.cursor.y % (self.size.1 - 1) == 0 {
-            self.clear();
-            execute!(stdout(), cursor::MoveTo(0, 0)).ok();
-            self.reader.print_lines(self.cursor.main.y, self.size.1);
-            self.cursor.reset_only_y();
-        }
+    fn handle_buffer_left_right(&mut self) {
+        self.clear();
+        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+        self.reader.print_lines(&self.cursor, &self.size);
+        self.cursor.reset_only_x();
     }
 }

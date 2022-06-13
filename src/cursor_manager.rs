@@ -21,46 +21,45 @@ pub struct Cursor {
 
 impl Cursor {
     pub fn move_left(&mut self) {
+        if self.main.x > 0 {
+            self.main.x -= 1;
+        }
         if self.x > 0 {
             self.x -= 1;
             self.set();
         }
-
-        if self.main.x > 0 {
-            self.main.x -= 1;
-        }
     }
 
     pub fn move_right(&mut self, max: u16) {
+        if self.main.x < usize::MAX {
+            self.main.x += 1;
+        }
+
         if self.x < max {
             self.x += 1;
             self.set();
         }
-
-        if self.main.x < usize::MAX {
-            self.main.x += 1;
-        }
     }
 
     pub fn move_top(&mut self) {
+        if self.main.y > 0 {
+            self.main.y -= 1;
+        }
+
         if self.y > 0 {
             self.y -= 1;
             self.set();
         }
-
-        if self.main.y > 0 {
-            self.main.y -= 1;
-        }
     }
 
     pub fn move_bottom(&mut self, max: u16) {
+        if self.main.y < usize::MAX {
+            self.main.y += 1;
+        }
+
         if self.y < max {
             self.y += 1;
             self.set();
-        }
-
-        if self.main.y < usize::MAX {
-            self.main.y += 1;
         }
     }
 
@@ -69,12 +68,6 @@ impl Cursor {
         self.y = 0;
         self.main.x = 0;
         self.main.y = 0;
-        self.set();
-    }
-
-    pub fn reset_only(&mut self) {
-        self.x = 0;
-        self.y = 0;
         self.set();
     }
 
