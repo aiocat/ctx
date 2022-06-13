@@ -56,26 +56,34 @@ impl Manager {
             match key.code {
                 KeyCode::Left | KeyCode::Right => {
                     self.handle_arrows(key);
-                    self.set_title();
                     self.handle_buffer_left_right();
                 }
                 KeyCode::Up | KeyCode::Down => {
                     self.handle_arrows(key);
-                    self.set_title();
                     self.handle_buffer_up_down();
                 }
                 KeyCode::Char('r') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.resize();
+                    } else if let KeyCode::Char(character) = key.code {
+                        self.buffer.add_character(&self.cursor, character);
+                        self.handle_arrows(KeyEvent::from(KeyCode::Right));
+                        self.handle_buffer();
                     }
                 }
                 KeyCode::Backspace => {
                     self.buffer.delete_character(&self.cursor);
-                    self.cursor.move_left();
-                    self.resize();
+                    self.handle_arrows(KeyEvent::from(KeyCode::Left));
+                    self.handle_buffer();
+                }
+                KeyCode::Char(given) => {
+                    self.buffer.add_character(&self.cursor, given);
+                    self.handle_arrows(KeyEvent::from(KeyCode::Right));
+                    self.handle_buffer();
                 }
                 _ => {}
             };
+            self.set_title();
         });
     }
 

@@ -70,12 +70,35 @@ impl Reader {
 
         let mut selected = take(&mut self.lines[line]);
 
-        if selected.len() == 0 {
+        if selected.is_empty() {
             self.lines.remove(line);
+            return;
         } else if column < selected.len() {
             selected.remove(column);
-            self.lines[line] = selected;
         }
+
+        self.lines[line] = selected;
+    }
+
+    pub fn add_character(&mut self, cursor: &Cursor, character: char) {
+        let line = cursor.main.y;
+        let column = cursor.main.x;
+
+        if line >= self.lines.len() {
+            for _ in self.lines.len()..=line {
+                self.lines.push(String::new());
+            }
+        }
+
+        let mut selected = take(&mut self.lines[line]);
+
+        if column >= selected.len() {
+            for _ in selected.len()..=column {
+                selected.push(' ');
+            }
+        }
+        selected.insert(column, character);
+        self.lines[line] = selected;
     }
 }
 
