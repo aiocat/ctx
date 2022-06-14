@@ -116,9 +116,9 @@ impl Manager {
     fn nearest_cursors(&mut self) -> (usize, usize) {
         (
             ((self.cursor.main.x as f64 / (self.size.0 - 1) as f64).floor() as usize
-                * self.size.0 as usize),
+                * (self.size.0 - 1) as usize),
             ((self.cursor.main.y as f64 / (self.size.1 - 1) as f64).floor() as usize
-                * self.size.1 as usize),
+                * (self.size.1 - 1) as usize),
         )
     }
 
