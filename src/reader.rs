@@ -100,6 +100,18 @@ impl Reader {
         selected.insert(column, character);
         self.lines[line] = selected;
     }
+
+    pub fn add_line(&mut self, cursor: &Cursor) {
+        let line = cursor.main.y;
+
+        if line >= self.lines.len() {
+            for _ in self.lines.len()..=line {
+                self.lines.push(String::new());
+            }
+        }
+
+        self.lines.insert(line, String::new());
+    }
 }
 
 fn read_file_lines<P>(filename: P) -> Vec<String>

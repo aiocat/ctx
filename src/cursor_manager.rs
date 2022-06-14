@@ -20,12 +20,16 @@ pub struct Cursor {
 }
 
 impl Cursor {
-    pub fn move_left(&mut self) {
+    pub fn move_left(&mut self, max: u16) {
         if self.main.x > 0 {
             self.main.x -= 1;
         }
+
         if self.x > 0 {
             self.x -= 1;
+            self.set();
+        } else if self.x == 0 && self.main.x != 0 {
+            self.x = max - 2;
             self.set();
         }
     }
@@ -35,19 +39,25 @@ impl Cursor {
             self.main.x += 1;
         }
 
-        if self.x < max {
+        if self.x == max - 2 {
+            self.x = 0;
+            self.set();
+        } else if self.x < max {
             self.x += 1;
             self.set();
         }
     }
 
-    pub fn move_top(&mut self) {
+    pub fn move_top(&mut self, max: u16) {
         if self.main.y > 0 {
             self.main.y -= 1;
         }
 
         if self.y > 0 {
             self.y -= 1;
+            self.set();
+        } else if self.y == 0 && self.main.y != 0 {
+            self.y = max - 2;
             self.set();
         }
     }
@@ -57,7 +67,10 @@ impl Cursor {
             self.main.y += 1;
         }
 
-        if self.y < max {
+        if self.y == max - 2 {
+            self.y = 0;
+            self.set();
+        } else if self.y < max {
             self.y += 1;
             self.set();
         }
@@ -68,22 +81,6 @@ impl Cursor {
         self.y = 0;
         self.main.x = 0;
         self.main.y = 0;
-        self.set();
-    }
-
-    pub fn reset_only(&mut self) {
-        self.x = 0;
-        self.y = 0;
-        self.set();
-    }
-
-    pub fn reset_only_x(&mut self) {
-        self.x = 0;
-        self.set();
-    }
-
-    pub fn reset_only_y(&mut self) {
-        self.y = 0;
         self.set();
     }
 

@@ -38,9 +38,9 @@ impl Manager {
 
     fn handle_arrows(&mut self, key: KeyEvent) {
         match key.code {
-            KeyCode::Left => self.cursor.move_left(),
+            KeyCode::Left => self.cursor.move_left(self.size.0),
             KeyCode::Right => self.cursor.move_right(self.size.0),
-            KeyCode::Up => self.cursor.move_top(),
+            KeyCode::Up => self.cursor.move_top(self.size.1),
             KeyCode::Down => self.cursor.move_bottom(self.size.1),
             _ => {}
         };
@@ -49,18 +49,13 @@ impl Manager {
     pub fn watch(&mut self) {
         self.read_file();
         self.set_title();
-        self.cursor.reset();
         self.handle_buffer();
 
         watch_key(move |key: KeyEvent| {
             match key.code {
-                KeyCode::Left | KeyCode::Right => {
+                KeyCode::Left | KeyCode::Right | KeyCode::Up | KeyCode::Down => {
                     self.handle_arrows(key);
-                    self.handle_buffer_left_right();
-                }
-                KeyCode::Up | KeyCode::Down => {
-                    self.handle_arrows(key);
-                    self.handle_buffer_up_down();
+                    self.handle_buffer();
                 }
                 KeyCode::Char('r') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
@@ -72,8 +67,13 @@ impl Manager {
                     }
                 }
                 KeyCode::Backspace => {
-                    self.buffer.delete_character(&self.cursor);
                     self.handle_arrows(KeyEvent::from(KeyCode::Left));
+                    self.buffer.delete_character(&self.cursor);
+                    self.handle_buffer();
+                }
+                KeyCode::Enter => {
+                    self.buffer.add_line(&self.cursor);
+                    self.handle_arrows(KeyEvent::from(KeyCode::Down));
                     self.handle_buffer();
                 }
                 KeyCode::Char(given) => {
@@ -94,6 +94,7 @@ impl Manager {
     fn resize(&mut self) {
         let win_size = terminal::size().map(|(x, y)| (x as u16, y as u16)).unwrap();
         self.size = Size(win_size.0, win_size.1);
+        self.cursor.reset();
         self.handle_buffer();
     }
 
@@ -101,9 +102,8 @@ impl Manager {
         execute!(
             stdout(),
             terminal::SetTitle(format!(
-                "Line {}, Column {}",
-                self.cursor.main.y + 1,
-                self.cursor.main.x
+                "LINE {} COLUMN {}",
+                self.cursor.main.y, self.cursor.main.x
             ))
         )
         .ok();
@@ -113,24 +113,31 @@ impl Manager {
         self.buffer.read_from_file("./deneme.txt");
     }
 
-    fn handle_buffer_up_down(&mut self) {
-        self.clear();
-        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
-        self.buffer.print_lines(&self.cursor, &self.size);
-        self.cursor.reset_only_y();
-    }
-
-    fn handle_buffer_left_right(&mut self) {
-        self.clear();
-        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
-        self.buffer.print_lines(&self.cursor, &self.size);
-        self.cursor.reset_only_x();
+    fn nearest_cursors(&mut self) -> (usize, usize) {
+        (
+            ((self.cursor.main.x as f64 / (self.size.0 - 1) as f64).floor() as usize
+                * self.size.0 as usize),
+            ((self.cursor.main.y as f64 / (self.size.1 - 1) as f64).floor() as usize
+                * self.size.1 as usize),
+        )
     }
 
     fn handle_buffer(&mut self) {
         self.clear();
+
         execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+
+        let (old_cursor_x, old_cursor_y) = (self.cursor.main.x, self.cursor.main.y);
+        let nearest = self.nearest_cursors();
+
+        self.cursor.main.x = nearest.0;
+        self.cursor.main.y = nearest.1;
+
         self.buffer.print_lines(&self.cursor, &self.size);
-        self.cursor.reset_only();
+
+        self.cursor.main.x = old_cursor_x;
+        self.cursor.main.y = old_cursor_y;
+
+        self.cursor.set();
     }
 }
