@@ -4,8 +4,10 @@
 // https://opensource.org/licenses/MIT
 
 use std::fs::File;
+use std::io::stdout;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::io::Write;
 use std::mem::take;
 use std::path::Path;
 
@@ -26,6 +28,7 @@ impl Reader {
     }
 
     pub fn print_lines(&mut self, cursor: &Cursor, size: &Size) {
+        let mut stdout = stdout();
         let mut count: u16 = 0;
 
         if self.lines.len() < cursor.main.y {
@@ -53,7 +56,7 @@ impl Reader {
                     break;
                 }
 
-                print!("{}", *character as char);
+                stdout.write_all(&[*character]).ok();
             }
 
             println!();
@@ -74,7 +77,17 @@ impl Reader {
             self.lines.remove(line);
             return;
         } else if column < selected.len() {
-            selected.remove(column);
+            let mut new_selected = String::new();
+
+            for (index, schar) in selected.chars().enumerate() {
+                if index == column {
+                    continue;
+                }
+
+                new_selected.push(schar);
+            }
+
+            selected = new_selected;
         }
 
         self.lines[line] = selected;
@@ -97,8 +110,17 @@ impl Reader {
                 selected.push(' ');
             }
         }
-        selected.insert(column, character);
-        self.lines[line] = selected;
+
+        let mut new_string = String::new();
+
+        for (index, schar) in selected.chars().enumerate() {
+            if index == column {
+                new_string.push(character);
+            }
+            new_string.push(schar);
+        }
+
+        self.lines[line] = new_string;
     }
 
     pub fn add_line(&mut self, cursor: &Cursor) {
