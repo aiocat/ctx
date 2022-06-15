@@ -6,6 +6,7 @@ mod manager;
 mod reader;
 
 fn main() {
+    r256::init();
     terminal::enable_raw_mode().expect("Could not turn on Raw mode");
 
     let mut manager = manager::Manager::new();

@@ -25,10 +25,10 @@ impl Cursor {
             self.main.x -= 1;
         }
 
-        if self.x > 0 {
+        if self.x > 2 {
             self.x -= 1;
             self.set();
-        } else if self.x == 0 && self.main.x != 0 {
+        } else if self.x == 2 && self.main.x != 0 {
             self.x = max - 2;
             self.set();
         }
@@ -40,7 +40,7 @@ impl Cursor {
         }
 
         if self.x == max - 2 {
-            self.x = 0;
+            self.x = 2;
             self.set();
         } else if self.x < max {
             self.x += 1;
@@ -53,10 +53,10 @@ impl Cursor {
             self.main.y -= 1;
         }
 
-        if self.y > 0 {
+        if self.y > 1 {
             self.y -= 1;
             self.set();
-        } else if self.y == 0 && self.main.y != 0 {
+        } else if self.y == 1 && self.main.y != 0 {
             self.y = max - 2;
             self.set();
         }
@@ -68,7 +68,7 @@ impl Cursor {
         }
 
         if self.y == max - 2 {
-            self.y = 0;
+            self.y = 1;
             self.set();
         } else if self.y < max {
             self.y += 1;
@@ -77,8 +77,8 @@ impl Cursor {
     }
 
     pub fn reset(&mut self) {
-        self.x = 0;
-        self.y = 0;
+        self.x = 2;
+        self.y = 1;
         self.main.x = 0;
         self.main.y = 0;
         self.set();

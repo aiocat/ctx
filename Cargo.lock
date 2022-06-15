@@ -50,6 +50,7 @@ name = "ctx"
 version = "0.1.0"
 dependencies = [
  "crossterm",
+ "r256",
 ]
 
 [[package]]
@@ -110,6 +111,15 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-sys",
+]
+
+[[package]]
+name = "r256"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bddc25efed11cd4d9a77d32e83900cdb12d4dc00b826a26ccf8d1643dd37ed81"
+dependencies = [
+ "winapi-util",
 ]
 
 [[package]]
@@ -184,6 +194,15 @@ name = "winapi-i686-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
+
+[[package]]
+name = "winapi-util"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70ec6ce85bb158151cae5e5c87f95a8e97d2c0c4b001223f33a334e3ce5de178"
+dependencies = [
+ "winapi",
+]
 
 [[package]]
 name = "winapi-x86_64-pc-windows-gnu"

@@ -6,6 +6,7 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::ClearType;
 use crossterm::{cursor, execute, terminal};
+use r256::{generate_string, Styles};
 use std::io::stdout;
 
 use crate::cursor_manager::{Cursor, MainCursor};
@@ -48,8 +49,8 @@ impl Manager {
 
     pub fn watch(&mut self) {
         self.read_file();
-        self.set_title();
         self.handle_buffer();
+        self.set_title();
 
         watch_key(move |key: KeyEvent| {
             match key.code {
@@ -60,6 +61,15 @@ impl Manager {
                 KeyCode::Char('r') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.resize();
+                    } else if let KeyCode::Char(character) = key.code {
+                        self.buffer.add_character(&self.cursor, character);
+                        self.handle_arrows(KeyEvent::from(KeyCode::Right));
+                        self.handle_buffer();
+                    }
+                }
+                KeyCode::Char('s') => {
+                    if key.modifiers.contains(KeyModifiers::CONTROL) {
+                        self.buffer.save_buffer();
                     } else if let KeyCode::Char(character) = key.code {
                         self.buffer.add_character(&self.cursor, character);
                         self.handle_arrows(KeyEvent::from(KeyCode::Right));
@@ -99,14 +109,28 @@ impl Manager {
     }
 
     fn set_title(&mut self) {
-        execute!(
-            stdout(),
-            terminal::SetTitle(format!(
-                "LINE {} COLUMN {}",
-                self.cursor.main.y, self.cursor.main.x
-            ))
-        )
-        .ok();
+        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+
+        println!("{:0fill$}", '\r', fill = self.size.0 as usize - 1);
+        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+
+        let mut color_combines: Vec<Styles> = Vec::new();
+        color_combines.push(Styles::FgColor256(13));
+        color_combines.push(Styles::Bold);
+        color_combines.push(Styles::Italic);
+
+        let will_print = generate_string(
+            &color_combines,
+            &format!(
+                "[CTX] LINE {}, COLUMN {}",
+                self.cursor.main.y + 1,
+                self.cursor.main.x
+            ),
+        );
+
+        print!("{}", will_print);
+
+        self.cursor.set();
     }
 
     fn read_file(&mut self) {
@@ -115,10 +139,10 @@ impl Manager {
 
     fn nearest_cursors(&mut self) -> (usize, usize) {
         (
-            ((self.cursor.main.x as f64 / (self.size.0 - 1) as f64).floor() as usize
-                * (self.size.0 - 1) as usize),
-            ((self.cursor.main.y as f64 / (self.size.1 - 1) as f64).floor() as usize
-                * (self.size.1 - 1) as usize),
+            ((self.cursor.main.x as f64 / (self.size.0 - 3) as f64).floor() as usize
+                * (self.size.0 - 3) as usize),
+            ((self.cursor.main.y as f64 / (self.size.1 - 2) as f64).floor() as usize
+                * (self.size.1 - 2) as usize),
         )
     }
 

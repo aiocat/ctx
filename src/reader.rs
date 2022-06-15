@@ -28,10 +28,12 @@ impl Reader {
     }
 
     pub fn print_lines(&mut self, cursor: &Cursor, size: &Size) {
-        let mut stdout = stdout();
-        let mut count: u16 = 0;
+        println!();
 
-        if self.lines.len() < cursor.main.y {
+        let mut stdout = stdout();
+        let mut count: u16 = 1;
+
+        if self.lines.len() <= cursor.main.y {
             println!();
             return;
         }
@@ -42,7 +44,9 @@ impl Reader {
                 break;
             }
 
-            let mut char_count: u16 = 0;
+            print!("~ ");
+            
+            let mut char_count: u16 = 2;
             let line_bytes = line.as_bytes();
 
             if line_bytes.len() < cursor.main.x {
@@ -133,6 +137,19 @@ impl Reader {
         }
 
         self.lines.insert(line, String::new());
+    }
+
+    pub fn save_buffer(&mut self) {
+        let mut new_buffer = String::new();
+
+        for buf in &self.lines {
+            new_buffer.push_str(buf);
+            new_buffer.push('\n');
+        }
+
+        new_buffer.pop();
+
+        std::fs::write("./deneme.txt", new_buffer).ok();
     }
 }
 
