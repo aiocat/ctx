@@ -1,9 +1,10 @@
 use crossterm::terminal;
 
+mod buffer_manager;
 mod cursor_manager;
 mod input;
+mod macros;
 mod manager;
-mod reader;
 
 fn main() {
     r256::init();

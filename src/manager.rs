@@ -4,14 +4,12 @@
 // https://opensource.org/licenses/MIT
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use crossterm::terminal::ClearType;
-use crossterm::{cursor, execute, terminal};
-use r256::{generate_string, Styles};
-use std::io::stdout;
+use crossterm::{execute, terminal};
+use r256::Styles;
 
+use crate::buffer_manager::Buffer;
 use crate::cursor_manager::{Cursor, MainCursor};
 use crate::input::watch_key;
-use crate::reader::Reader;
 
 #[derive(Default)]
 pub struct Size(pub u16, pub u16);
@@ -19,7 +17,7 @@ pub struct Size(pub u16, pub u16);
 pub struct Manager {
     pub size: Size,
     pub cursor: Cursor,
-    pub buffer: Reader,
+    pub buffer: Buffer,
 }
 
 impl Manager {
@@ -33,7 +31,7 @@ impl Manager {
                 y: 0,
                 main: MainCursor { x: 0, y: 0 },
             },
-            buffer: Reader::default(),
+            buffer: Buffer::default(),
         }
     }
 
@@ -62,18 +60,14 @@ impl Manager {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.resize();
                     } else if let KeyCode::Char(character) = key.code {
-                        self.buffer.add_character(&self.cursor, character);
-                        self.handle_arrows(KeyEvent::from(KeyCode::Right));
-                        self.handle_buffer();
+                        self.type_char(character);
                     }
                 }
                 KeyCode::Char('s') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.buffer.save_buffer();
                     } else if let KeyCode::Char(character) = key.code {
-                        self.buffer.add_character(&self.cursor, character);
-                        self.handle_arrows(KeyEvent::from(KeyCode::Right));
-                        self.handle_buffer();
+                        self.type_char(character);
                     }
                 }
                 KeyCode::Backspace => {
@@ -87,9 +81,7 @@ impl Manager {
                     self.handle_buffer();
                 }
                 KeyCode::Char(given) => {
-                    self.buffer.add_character(&self.cursor, given);
-                    self.handle_arrows(KeyEvent::from(KeyCode::Right));
-                    self.handle_buffer();
+                    self.type_char(given);
                 }
                 _ => {}
             };
@@ -97,8 +89,14 @@ impl Manager {
         });
     }
 
+    fn type_char(&mut self, character: char) {
+        self.buffer.add_character(&self.cursor, character);
+        self.handle_arrows(KeyEvent::from(KeyCode::Right));
+        self.handle_buffer();
+    }
+
     pub fn clear(&mut self) {
-        execute!(stdout(), terminal::Clear(ClearType::All)).ok();
+        crate::clear!();
     }
 
     fn resize(&mut self) {
@@ -109,26 +107,18 @@ impl Manager {
     }
 
     fn set_title(&mut self) {
-        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
-
+        crate::cursor_pos!(0, 0);
         println!("{:0fill$}", '\r', fill = self.size.0 as usize - 1);
-        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+        crate::cursor_pos!(0, 0);
 
-        let mut color_combines: Vec<Styles> = Vec::new();
-        color_combines.push(Styles::FgColor256(13));
-        color_combines.push(Styles::Bold);
-        color_combines.push(Styles::Italic);
-
-        let will_print = generate_string(
-            &color_combines,
+        r256::print(
+            &vec![Styles::FgColor256(13), Styles::Bold, Styles::Italic],
             &format!(
                 "[CTX] LINE {}, COLUMN {}",
                 self.cursor.main.y + 1,
                 self.cursor.main.x
             ),
         );
-
-        print!("{}", will_print);
 
         self.cursor.set();
     }
@@ -138,18 +128,18 @@ impl Manager {
     }
 
     fn nearest_cursors(&mut self) -> (usize, usize) {
+        let calculated_size_x = self.size.0 as usize - 3;
+        let calculated_size_y = self.size.1 as usize - 2;
+
         (
-            ((self.cursor.main.x as f64 / (self.size.0 - 3) as f64).floor() as usize
-                * (self.size.0 - 3) as usize),
-            ((self.cursor.main.y as f64 / (self.size.1 - 2) as f64).floor() as usize
-                * (self.size.1 - 2) as usize),
+            ((self.cursor.main.x / calculated_size_x) * calculated_size_x),
+            ((self.cursor.main.y / calculated_size_y) * calculated_size_y),
         )
     }
 
     fn handle_buffer(&mut self) {
         self.clear();
-
-        execute!(stdout(), cursor::MoveTo(0, 0)).ok();
+        crate::cursor_pos!(0, 0);
 
         let (old_cursor_x, old_cursor_y) = (self.cursor.main.x, self.cursor.main.y);
         let nearest = self.nearest_cursors();

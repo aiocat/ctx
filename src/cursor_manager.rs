@@ -3,9 +3,6 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-use crossterm::{cursor, execute};
-use std::io::stdout;
-
 #[derive(Default, Debug)]
 pub struct MainCursor {
     pub x: usize,
@@ -85,6 +82,6 @@ impl Cursor {
     }
 
     pub fn set(&self) {
-        execute!(stdout(), cursor::MoveTo(self.x, self.y)).ok();
+        crate::cursor_pos!(self.x, self.y);
     }
 }

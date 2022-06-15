@@ -15,11 +15,11 @@ use crate::cursor_manager::Cursor;
 use crate::manager::Size;
 
 #[derive(Default)]
-pub struct Reader {
+pub struct Buffer {
     lines: Vec<String>,
 }
 
-impl Reader {
+impl Buffer {
     pub fn read_from_file<P>(&mut self, path: P)
     where
         P: AsRef<Path>,
@@ -45,7 +45,6 @@ impl Reader {
             }
 
             print!("~ ");
-            
             let mut char_count: u16 = 2;
             let line_bytes = line.as_bytes();
 
