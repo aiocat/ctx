@@ -108,14 +108,13 @@ impl Buffer {
 
         let mut selected = take(&mut self.lines[line]);
 
-        if column >= selected.len() {
+        if selected.len() <= column {
             for _ in selected.len()..=column {
                 selected.push(' ');
             }
         }
 
         let mut new_string = String::new();
-
         for (index, schar) in selected.chars().enumerate() {
             if index == column {
                 new_string.push(character);
@@ -129,13 +128,79 @@ impl Buffer {
     pub fn add_line(&mut self, cursor: &Cursor) {
         let line = cursor.main.y;
 
-        if line >= self.lines.len() {
+        if self.lines.len() < line {
             for _ in self.lines.len()..=line {
                 self.lines.push(String::new());
             }
         }
 
         self.lines.insert(line, String::new());
+    }
+
+    pub fn split_to_up(&mut self, cursor: &Cursor) {
+        let line = cursor.main.y;
+        let column = cursor.main.x;
+
+        if self.lines.len() <= line || line == 0 {
+            return;
+        }
+
+        let taken_first = take(&mut self.lines[line]);
+        if taken_first.len() < column {
+            self.lines[line] = taken_first;
+            return;
+        }
+
+        let mut taken_second = take(&mut self.lines[line - 1]);
+
+        let mut slice_first = String::new();
+        let mut slice_second = String::new();
+
+        for (index, character) in taken_first.chars().enumerate() {
+            if index >= column {
+                slice_second.push(character);
+            } else {
+                slice_first.push(character);
+            }
+        }
+
+        taken_second.push_str(&slice_second);
+
+        self.lines[line] = slice_first;
+        self.lines[line - 1] = taken_second;
+    }
+
+    pub fn split_to_down(&mut self, cursor: &Cursor) {
+        let line = cursor.main.y;
+        let column = cursor.main.x;
+
+        if self.lines.len() <= line + 1 {
+            return;
+        }
+
+        let taken_first = take(&mut self.lines[line]);
+        if taken_first.len() < column {
+            self.lines[line] = taken_first;
+            return;
+        }
+
+        let mut taken_second = take(&mut self.lines[line + 1]);
+
+        let mut slice_first = String::new();
+        let mut slice_second = String::new();
+
+        for (index, character) in taken_first.chars().enumerate() {
+            if index >= column {
+                slice_second.push(character);
+            } else {
+                slice_first.push(character);
+            }
+        }
+
+        taken_second.push_str(&slice_second);
+
+        self.lines[line] = slice_first;
+        self.lines[line + 1] = taken_second;
     }
 
     pub fn save_buffer(&mut self) {

@@ -39,8 +39,20 @@ impl Manager {
         match key.code {
             KeyCode::Left => self.cursor.move_left(self.size.0),
             KeyCode::Right => self.cursor.move_right(self.size.0),
-            KeyCode::Up => self.cursor.move_top(self.size.1),
-            KeyCode::Down => self.cursor.move_bottom(self.size.1),
+            KeyCode::Up => {
+                if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    self.buffer.split_to_up(&self.cursor);
+                } else {
+                    self.cursor.move_top(self.size.1);
+                }
+            }
+            KeyCode::Down => {
+                if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    self.buffer.split_to_down(&self.cursor);
+                } else {
+                    self.cursor.move_bottom(self.size.1);
+                }
+            }
             _ => {}
         };
     }
