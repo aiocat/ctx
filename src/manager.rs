@@ -71,6 +71,7 @@ impl Manager {
                 KeyCode::Char('r') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.resize();
+                        self.handle_buffer();
                     } else if let KeyCode::Char(character) = key.code {
                         self.type_char(character);
                     }
@@ -78,6 +79,14 @@ impl Manager {
                 KeyCode::Char('s') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.buffer.save_buffer();
+                    } else if let KeyCode::Char(character) = key.code {
+                        self.type_char(character);
+                    }
+                }
+                KeyCode::Char('d') => {
+                    if key.modifiers.contains(KeyModifiers::CONTROL) {
+                        self.buffer.remove_line(&self.cursor);
+                        self.handle_buffer();
                     } else if let KeyCode::Char(character) = key.code {
                         self.type_char(character);
                     }

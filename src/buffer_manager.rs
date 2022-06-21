@@ -137,6 +137,16 @@ impl Buffer {
         self.lines.insert(line, String::new());
     }
 
+    pub fn remove_line(&mut self, cursor: &Cursor) {
+        let line = cursor.main.y;
+
+        if self.lines.len() <= line {
+            return;
+        }
+
+        self.lines.remove(line);
+    }
+
     pub fn split_to_up(&mut self, cursor: &Cursor) {
         let line = cursor.main.y;
         let column = cursor.main.x;
