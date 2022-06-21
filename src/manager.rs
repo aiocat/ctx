@@ -76,6 +76,14 @@ impl Manager {
                         self.type_char(character);
                     }
                 }
+                KeyCode::Char('u') => {
+                    if key.modifiers.contains(KeyModifiers::CONTROL) {
+                        self.buffer.load_old();
+                        self.handle_buffer();
+                    } else if let KeyCode::Char(character) = key.code {
+                        self.type_char(character);
+                    }
+                }
                 KeyCode::Char('s') => {
                     if key.modifiers.contains(KeyModifiers::CONTROL) {
                         self.buffer.save_buffer();

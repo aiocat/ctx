@@ -16,6 +16,7 @@ use crate::manager::Size;
 
 #[derive(Default)]
 pub struct Buffer {
+    old: Option<Vec<String>>,
     lines: Vec<String>,
 }
 
@@ -24,7 +25,15 @@ impl Buffer {
     where
         P: AsRef<Path>,
     {
+        self.old = None;
         self.lines = read_file_lines(path);
+    }
+
+    pub fn load_old(&mut self) {
+        let data = take(&mut self.old);
+        if let Some(inside) = data {
+            self.lines = inside;
+        }
     }
 
     pub fn print_lines(&mut self, cursor: &Cursor, size: &Size) {
@@ -67,6 +76,8 @@ impl Buffer {
     }
 
     pub fn delete_character(&mut self, cursor: &Cursor) {
+        self.old = Some(self.lines.clone());
+
         let line = cursor.main.y;
         let column = cursor.main.x;
 
@@ -97,6 +108,8 @@ impl Buffer {
     }
 
     pub fn add_character(&mut self, cursor: &Cursor, character: char) {
+        self.old = Some(self.lines.clone());
+
         let line = cursor.main.y;
         let column = cursor.main.x;
 
@@ -126,6 +139,8 @@ impl Buffer {
     }
 
     pub fn add_line(&mut self, cursor: &Cursor) {
+        self.old = Some(self.lines.clone());
+
         let line = cursor.main.y;
 
         if self.lines.len() < line {
@@ -138,6 +153,8 @@ impl Buffer {
     }
 
     pub fn remove_line(&mut self, cursor: &Cursor) {
+        self.old = Some(self.lines.clone());
+
         let line = cursor.main.y;
 
         if self.lines.len() <= line {
@@ -148,6 +165,8 @@ impl Buffer {
     }
 
     pub fn split_to_up(&mut self, cursor: &Cursor) {
+        self.old = Some(self.lines.clone());
+
         let line = cursor.main.y;
         let column = cursor.main.x;
 
@@ -181,6 +200,7 @@ impl Buffer {
     }
 
     pub fn split_to_down(&mut self, cursor: &Cursor) {
+        self.old = Some(self.lines.clone());
         let line = cursor.main.y;
         let column = cursor.main.x;
 
