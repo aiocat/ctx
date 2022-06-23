@@ -16,17 +16,16 @@ use crate::manager::Size;
 
 #[derive(Default)]
 pub struct Buffer {
-    old: Option<Vec<String>>,
-    lines: Vec<String>,
+    pub file_name: String,
+    pub old: Option<Vec<String>>,
+    pub lines: Vec<String>,
 }
 
 impl Buffer {
-    pub fn read_from_file<P>(&mut self, path: P)
-    where
-        P: AsRef<Path>,
+    pub fn read_from_file(&mut self)
     {
         self.old = None;
-        self.lines = read_file_lines(path);
+        self.lines = read_file_lines(&self.file_name);
     }
 
     pub fn load_old(&mut self) {
@@ -243,7 +242,7 @@ impl Buffer {
 
         new_buffer.pop();
 
-        std::fs::write("./deneme.txt", new_buffer).ok();
+        std::fs::write(&self.file_name, new_buffer).ok();
     }
 }
 

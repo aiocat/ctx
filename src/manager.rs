@@ -21,7 +21,7 @@ pub struct Manager {
 }
 
 impl Manager {
-    pub fn new() -> Self {
+    pub fn new(file_name: String) -> Self {
         let win_size = terminal::size().map(|(x, y)| (x as u16, y as u16)).unwrap();
 
         Self {
@@ -31,7 +31,10 @@ impl Manager {
                 y: 0,
                 main: MainCursor { x: 0, y: 0 },
             },
-            buffer: Buffer::default(),
+            buffer: Buffer{
+                file_name,
+                ..Buffer::default()
+            },
         }
     }
 
@@ -153,7 +156,7 @@ impl Manager {
     }
 
     fn read_file(&mut self) {
-        self.buffer.read_from_file("./deneme.txt");
+        self.buffer.read_from_file();
     }
 
     fn nearest_cursors(&mut self) -> (usize, usize) {
