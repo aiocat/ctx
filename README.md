@@ -18,6 +18,7 @@ This editor is supports UTF-8, and for this may buffer-manupilation codes looks 
 - To open a file run `ctx ./file.txt`
 - To save the file, press `CTRL + S`
 - To delete a line, press `CTRL + D`
+- To resize buffer, press `CTRL + R`
 - To undo what did you do, press `CTRL + U` (only one command can be reversed)
 - To split-up, press `CTRL + UP ARROW`
 - To split-down, press `CTRL + DOWN ARROW`
